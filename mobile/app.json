@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "RouteShare",
+    "slug": "route-share",
+    "version": "1.0.0",
+    "platforms": ["ios", "android"],
+    "sdkVersion": "49.0.0"
+  }
+}

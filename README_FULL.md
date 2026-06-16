@@ -19,10 +19,9 @@ The backend runs on `http://localhost:4000` by default.
 2. `npm install`
 3. `npm start`
 
-Use Expo Go or an emulator to run the mobile app.
+Use Expo Go or emulator to run the mobile app.
 
 ## Notes
 - The backend uses SQLite in `backend/data/app.db`
 - Authentication is JWT-based
 - Parcel workflow includes barcode/QR generation and scan status updates
-- The mobile app currently includes login and location capture scaffolding
