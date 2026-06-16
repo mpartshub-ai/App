@@ -1,57 +1,101 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity } from 'react-native';
 
-const API_URL = 'http://10.0.2.2:4000/api';
+export default function SearchTripsScreen({ navigation }) {
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-export default function SearchTripsScreen() {
-  const [pickup, setPickup] = useState('');
-  const [dropoff, setDropoff] = useState('');
-  const [results, setResults] = useState([]);
-
-  async function searchTrips() {
-    const token = await AsyncStorage.getItem('token');
+  const loadTrips = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/passengers/search?pickup=${encodeURIComponent(pickup)}&dropoff=${encodeURIComponent(dropoff)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        Alert.alert('Search failed', data.error || 'Unable to search trips');
-        return;
+      const response = await fetch('http://localhost:4000/api/drivers');
+      if (response.ok) {
+        const data = await response.json();
+        setTrips(data || []);
       }
-      setResults(data.matches);
-    } catch (err) {
-      Alert.alert('Network error', err.message);
+    } catch (error) {
+      Alert.alert('Error', 'Could not load trips. Backend may not be running.');
     }
-  }
+    setLoading(false);
+  };
+
+  React.useEffect(() => {
+    loadTrips();
+  }, []);
 
   return (
-    <View style={styles.container}>
-      <TextInput placeholder="Pickup (lat,lng)" value={pickup} onChangeText={setPickup} style={styles.input} />
-      <TextInput placeholder="Dropoff (lat,lng)" value={dropoff} onChangeText={setDropoff} style={styles.input} />
-      <Button title="Search" onPress={searchTrips} />
-      <FlatList
-        style={styles.list}
-        data={results}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.tripCard}>
-            <Text style={styles.tripTitle}>{item.origin} → {item.destination}</Text>
-            <Text>Departure: {item.departureTime}</Text>
-            <Text>Seats: {item.seatsAvailable}</Text>
-            <Text>Match score: {item.matchScore}</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Available Trips</Text>
+      
+      {trips.length === 0 ? (
+        <Text style={styles.emptyText}>No trips available</Text>
+      ) : (
+        trips.map((trip, index) => (
+          <View key={index} style={styles.tripCard}>
+            <Text style={styles.tripTitle}>Trip {index + 1}</Text>
+            <Text style={styles.tripInfo}>Driver ID: {trip.id}</Text>
           </View>
-        )}
-      />
-    </View>
+        ))
+      )}
+
+      <TouchableOpacity 
+        style={styles.button}
+        onPress={loadTrips}
+      >
+        <Text style={styles.buttonText}>{loading ? 'Loading...' : 'Refresh Trips'}</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 12 },
-  list: { marginTop: 16 },
-  tripCard: { borderWidth: 1, borderColor: '#eee', borderRadius: 10, padding: 14, marginBottom: 12, backgroundColor: '#fff' },
-  tripTitle: { fontWeight: 'bold', marginBottom: 6 }
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  tripCard: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tripTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  tripInfo: {
+    fontSize: 14,
+    color: '#666',
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    padding: 15,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
